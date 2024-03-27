@@ -71,14 +71,14 @@ class RegistrationApplication:
 
         return valid
 
-    def validate_email(self):
-        if "@" in self.email and "." in self.email:
+    def validate_email(self, email):
+        if "@" in email and "." in email:
             return True
         else:
             return False
 
-    def validate_phone(self):
-        if self.phone.isdigit() and len(self.phone) >= 10:
+    def validate_phone(self, phone):
+        if phone.isdigit() and len(phone) >= 10:
             return True
         else:
             return False
@@ -120,7 +120,7 @@ class RegistrationApplication:
 def main():
     root = tk.Tk()
     RegistrationApplication(root)
-    root.mainloop
+    root.mainloop()
 
 
 if __name__ == "__main__":
