@@ -45,4 +45,4 @@ This application allows users to fill out a registration form, validates the inp
 
 2. Fill out the registration form with your details.
 3. Click the "Submit" button.
-4. If the form is submitted successfully, a PDF registration form will be generated in the same directory.
+4. If the form is submitted successfully, a PDF registration form with name {AICTE_ID}_registration_form.pdf will be generated in the same directory.
