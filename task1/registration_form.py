@@ -104,8 +104,7 @@ class RegistrationApplication:
             return False
 
     def generate_pdf(self):
-        # Create a PDF with user's name as part of the filename
-        # Create a PDF with user's name as part of the filename
+        # Create a PDF with user's aicte id as part of the filename
         filename = f"{self.aicte.get()}_registration_form.pdf"
         c = canvas.Canvas(filename, pagesize=letter)
 
