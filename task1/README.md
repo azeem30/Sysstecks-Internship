@@ -5,7 +5,7 @@ This application allows users to fill out a registration form, validates the inp
 ## Features
 
 - User-friendly interface created with Tkinter.
-- Validates input data for Name, AICTE ID, Email, and Phone number.
+- Validates input data for Name, AICTE ID, Email, Address and Phone number.
 - Generates a PDF registration form with user-provided information.
 - Error messages displayed for invalid input data.
 

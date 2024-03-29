@@ -13,6 +13,7 @@ class RegistrationApplication:
         self.email = tk.StringVar()
         self.phone = tk.StringVar()
         self.aicte = tk.StringVar()
+        self.address = tk.StringVar()  # New variable for address
         self.college = tk.StringVar()
 
         self.create_widgets()
@@ -48,23 +49,28 @@ class RegistrationApplication:
         # Phone Label and Input
         tk.Label(self.master, text="Phone:").grid(row=6, column=0, padx=10, pady=5, sticky="w")
         self.phone_entry = tk.Entry(self.master, textvariable=self.phone, width=40)
-        self.phone_entry.grid(row=6, column=1, padx=10, pady=5,)
+        self.phone_entry.grid(row=6, column=1, padx=10, pady=5)
 
         # Error Label for Phone
         self.phone_error = tk.Label(self.master, text="", fg="red")
         self.phone_error.grid(row=7, column=1, sticky="w")
 
+        # Address Label and Input (Multiline Entry)
+        tk.Label(self.master, text="Address:").grid(row=8, column=0, padx=10, pady=5, sticky="w")
+        self.address_entry = tk.Text(self.master, width=40, height=5)
+        self.address_entry.grid(row=8, column=1, padx=10, pady=5)
+
         # College Name Label and Input
-        tk.Label(self.master, text="College:").grid(row=8, column=0, padx=10, pady=5, sticky="w")
+        tk.Label(self.master, text="College:").grid(row=10, column=0, padx=10, pady=5, sticky="w")
         self.college_entry = tk.Entry(self.master, textvariable=self.college, width=70)
-        self.college_entry.grid(row=8, column=1, padx=10, pady=5)
+        self.college_entry.grid(row=10, column=1, padx=10, pady=5)
 
         # Error Label for College
         self.college_error = tk.Label(self.master, text="", fg="red")
-        self.college_error.grid(row=9, column=1, sticky="w")
+        self.college_error.grid(row=11, column=1, sticky="w")
 
         # Submit Button
-        tk.Button(self.master, text="Submit", command=self.submit_form, width=20).grid(row=11, columnspan=2, pady=10)
+        tk.Button(self.master, text="Submit", command=self.submit_form, width=20).grid(row=12, columnspan=2, pady=10)
 
     def validate_data(self):
         valid = True
@@ -79,6 +85,10 @@ class RegistrationApplication:
 
         if self.phone.get() == "":
             self.phone_error.config(text="Phone cannot be empty")
+            valid = False
+
+        if self.aicte.get() == "":
+            self.aicte_error.config(text="AICTE ID cannot be empty")
             valid = False
 
         if not self.validate_email(self.email.get()):
@@ -137,9 +147,14 @@ class RegistrationApplication:
         c.drawString(90, 660, self.phone.get())
         c.setFont("Helvetica", 12)
 
-        c.drawString(50, 640, "College: ")
+        c.drawString(50, 640, "Address: ")
         c.setFont("Helvetica-Bold", 12)
-        c.drawString(100, 640, self.college.get())
+        c.drawString(100, 640, self.address_entry.get("1.0", "end-1c"))  # Get address from Text widget
+        c.setFont("Helvetica", 12)
+
+        c.drawString(50, 620, "College: ")
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(100, 620, self.college.get())
         c.setFont("Helvetica", 12)
 
         # Divider for footer
@@ -165,6 +180,7 @@ class RegistrationApplication:
         self.aicte.set("")
         self.email.set("")
         self.phone.set("")
+        self.address_entry.delete("1.0", "end")  # Clear address entry
         self.college.set("")
         self.clear_errors()
 
@@ -185,4 +201,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
