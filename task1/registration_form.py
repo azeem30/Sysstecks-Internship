@@ -1,7 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
+from internship.task1.pdf_generator import generate_pdf
 
 
 class RegistrationApplication:
@@ -113,64 +112,18 @@ class RegistrationApplication:
         else:
             return False
 
-    def generate_pdf(self):
-        # Create a PDF with user's aicte id as part of the filename
-        filename = f"{self.aicte.get()}_registration_form.pdf"
-        c = canvas.Canvas(filename, pagesize=letter)
-
-        # Heading
-        c.setFont("Helvetica-Bold", 16)
-        c.drawCentredString(300, 750, "Registration Form")
-
-        # Divider below heading
-        c.line(50, 740, 550, 740)
-
-        # Write data to PDF
-        c.setFont("Helvetica", 12)
-        c.drawString(50, 720, "Name: ")
-        c.setFont("Helvetica-Bold", 12)
-        c.drawString(90, 720, self.name.get())
-        c.setFont("Helvetica", 12)
-
-        c.drawString(50, 700, "AICTE ID: ")
-        c.setFont("Helvetica-Bold", 12)
-        c.drawString(110, 700, self.aicte.get())
-        c.setFont("Helvetica", 12)
-
-        c.drawString(50, 680, "Email: ")
-        c.setFont("Helvetica-Bold", 12)
-        c.drawString(90, 680, self.email.get())
-        c.setFont("Helvetica", 12)
-
-        c.drawString(50, 660, "Phone: ")
-        c.setFont("Helvetica-Bold", 12)
-        c.drawString(90, 660, self.phone.get())
-        c.setFont("Helvetica", 12)
-
-        c.drawString(50, 640, "Address: ")
-        c.setFont("Helvetica-Bold", 12)
-        c.drawString(100, 640, self.address_entry.get("1.0", "end-1c"))  # Get address from Text widget
-        c.setFont("Helvetica", 12)
-
-        c.drawString(50, 620, "College: ")
-        c.setFont("Helvetica-Bold", 12)
-        c.drawString(100, 620, self.college.get())
-        c.setFont("Helvetica", 12)
-
-        # Divider for footer
-        c.line(50, 50, 550, 50)
-
-        # Footer
-        c.setFont("Helvetica", 10)
-        c.drawString(50, 30, "Systecks IT Solutions")
-
-        c.save()
-
     def submit_form(self):
         self.clear_errors()
         if not self.validate_data():
             return
-        self.generate_pdf()
+        generate_pdf(
+            self.name.get(),
+            self.aicte.get(),
+            self.email.get(),
+            self.phone.get(),
+            self.address_entry.get("1.0", "end-1c"),
+            self.college.get()
+        )
         messagebox.showinfo("Success", "Form Submitted Successfully!")
         self.clear_form()
 
