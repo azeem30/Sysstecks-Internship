@@ -5,6 +5,12 @@ from tkinter import filedialog, messagebox
 import sqlite3
 import socket
 import hashlib
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import padding
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+
 
 root = Tk()
 root.title("Share")
@@ -20,6 +26,44 @@ c.execute('''CREATE TABLE IF NOT EXISTS users (
     password TEXT
 )''')
 conn.commit()
+
+def generate_key(password, salt):
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=salt,
+        iterations=100000,
+        backend=default_backend()
+    )
+    return kdf.derive(password)
+
+def encrypt_file(key, filename, output_filename):
+    with open(filename, 'rb') as f:
+        plaintext = f.read()
+
+    padder = padding.PKCS7(128).padder()
+    padded_plaintext = padder.update(plaintext) + padder.finalize()
+
+    cipher = Cipher(algorithms.AES(key), modes.ECB(), backend=default_backend())
+    encryptor = cipher.encryptor()
+    ciphertext = encryptor.update(padded_plaintext) + encryptor.finalize()
+
+    with open(output_filename, 'wb') as f:
+        f.write(ciphertext)
+
+def decrypt_file(key, filename, output_filename):
+    with open(filename, 'rb') as f:
+        ciphertext = f.read()
+
+    cipher = Cipher(algorithms.AES(key), modes.ECB(), backend=default_backend())
+    decryptor = cipher.decryptor()
+    padded_plaintext = decryptor.update(ciphertext) + decryptor.finalize()
+
+    unpadder = padding.PKCS7(128).unpadder()
+    plaintext = unpadder.update(padded_plaintext) + unpadder.finalize()
+
+    with open(output_filename, 'wb') as f:
+        f.write(plaintext)
 
 def register_user(username, password):
     password_hash = hashlib.sha256(password.encode()).hexdigest()
@@ -116,12 +160,12 @@ def Send():
         s.listen(1)
         print('Waiting for connections')
         conn, address = s.accept()
-        file = open(filename, 'rb')
-        file_data = file.read(1024)
-        while file_data:
-            conn.send(file_data)
-            file_data = file.read(1024)
-        file.close()
+        encrypt_file(key, filename, filename)
+        with open(filename, 'rb') as f:
+            file_data = f.read(1024)
+            while file_data:
+                conn.send(file_data)
+                file_data = f.read(1024)
         conn.close()
         print("File sent successfully!")
 
@@ -159,11 +203,15 @@ def Receive():
         s = socket.socket()
         port = 8080
         s.connect((id, port))
-        file = open(filename_dup, 'wb')
-        file_data = s.recv(1024)
-        file.write(file_data)
-        file.close()
-        print("File Received Successfully!")
+        with open(filename_dup, 'wb') as f:
+            while True:
+                file_data = s.recv(1024)
+                if not file_data:
+                    break
+                f.write(file_data)
+        s.close()
+        decrypt_file(key, filename_dup, filename_dup)
+        print("File Received and Decrypted Successfully!")
 
     window_icon = PhotoImage(file="icons/receive.png")
     window.iconphoto(False, window_icon)
@@ -189,6 +237,10 @@ def Receive():
     download_button.place(x=20, y=380)
 
     window.mainloop()
+
+password = b'ThisIsMyPasswordPleaseDoNotShare'
+salt = b'ThisIsMySalt'
+key = generate_key(password, salt)
 
 icon = PhotoImage(file="icons/share.png")
 root.iconphoto(False, icon)
