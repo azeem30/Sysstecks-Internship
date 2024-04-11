@@ -2,13 +2,100 @@ import os
 import threading
 from tkinter import *
 from tkinter import filedialog, messagebox
+import sqlite3
 import socket
+import hashlib
 
 root = Tk()
 root.title("Share")
-root.geometry("450x560+500+200")
+root.geometry("500x560+500+200")
 root.configure(bg="#f4fdfe")
 root.resizable(False, False)
+
+conn = sqlite3.connect('sysstecks.db')
+c = conn.cursor()
+
+c.execute('''CREATE TABLE IF NOT EXISTS users (
+    username TEXT PRIMARY KEY,
+    password TEXT
+)''')
+conn.commit()
+
+def register_user(username, password):
+    password_hash = hashlib.sha256(password.encode()).hexdigest()
+    try:
+        c.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password_hash))
+        conn.commit()
+        messagebox.showinfo("Success", "Registration successful!")
+    except sqlite3.IntegrityError:
+        messagebox.showerror("Error", "Username already exists!")
+
+def authenticate_user(username, password):
+    password_hash = hashlib.sha256(password.encode()).hexdigest()
+    c.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password_hash))
+    if c.fetchone():
+        return True
+    else:
+        return False
+
+def Register():
+    def register_attempt():
+        user = new_username_entry.get()
+        pwd = new_password_entry.get()
+        register_user(user, pwd)
+        register_window.destroy()
+
+    register_window = Toplevel(root)
+    register_window.title("Register")
+    register_window.geometry("250x140")
+    register_window.configure(bg="#f4fdfe")
+    register_window.resizable(False, False)
+
+    register_icon = PhotoImage(file="icons/register.png")
+    register_window.iconphoto(False, register_icon)
+
+    Label(register_window, text="Username", bg="#f4fdfe").grid(row=0, column=0, padx=10, pady=10)
+    Label(register_window, text="Password", bg="#f4fdfe").grid(row=1, column=0, padx=10, pady=10)
+
+    new_username_entry = Entry(register_window, width=20)
+    new_username_entry.grid(row=0, column=1, padx=10, pady=10)
+    new_password_entry = Entry(register_window, width=20, show="*")
+    new_password_entry.grid(row=1, column=1, padx=10, pady=10)
+
+    register_button = Button(register_window, text="Register", command=register_attempt)
+    register_button.grid(row=2, columnspan=2, padx=10, pady=10)
+
+def Login():
+    def login_attempt():
+        user = username_entry.get()
+        pwd = password_entry.get()
+        if authenticate_user(user, pwd):
+            messagebox.showinfo("Success", "Login successful!")
+            login_window.destroy()
+            send.config(state=NORMAL)
+            receive.config(state=NORMAL)
+        else:
+            messagebox.showerror("Error", "Invalid username or password")
+
+    login_window = Toplevel(root)
+    login_window.title("Login")
+    login_window.geometry("250x140")
+    login_window.configure(bg="#f4fdfe")
+    login_window.resizable(False, False)
+
+    login_icon = PhotoImage(file="icons/login.png")
+    login_window.iconphoto(False, login_icon)
+
+    Label(login_window, text="Username", bg="#f4fdfe").grid(row=0, column=0, padx=10, pady=10)
+    Label(login_window, text="Password", bg="#f4fdfe").grid(row=1, column=0, padx=10, pady=10)
+
+    username_entry = Entry(login_window, width=20)
+    username_entry.grid(row=0, column=1, padx=10, pady=10)
+    password_entry = Entry(login_window, width=20, show="*")
+    password_entry.grid(row=1, column=1, padx=10, pady=10)
+
+    login_button = Button(login_window, text="Login", command=login_attempt)
+    login_button.grid(row=2, columnspan=2, padx=10, pady=10)
 
 def Send():
     window = Toplevel(root)
@@ -110,15 +197,26 @@ Label(root, text="File Transfer", font=('Acumin Variable Concept', 20, 'bold'), 
 Frame(root, width=400, height=2, bg="#f3f5f6").place(x=25, y=80)
 
 send_icon = PhotoImage(file="icons/send.png").subsample(17)  # Resizes the image by a factor of 2
-send = Button(root, image=send_icon, bg="#f4fdfe", bd=0, command=Send)
+send = Button(root, image=send_icon, bg="#f4fdfe", bd=0, state=DISABLED, command=Send)
 send.place(x=50, y=95)
 
-receive_icon = PhotoImage(file="icons/receive.png").subsample(3)  # Resizes the image by a factor of 2
-receive = Button(root, image=receive_icon, bg="#f4fdfe", bd=0, command=Receive)
-receive.place(x=300, y=100)
+register_icon = PhotoImage(file="icons/register.png").subsample(3)  # Resizes the image by a factor of 2
+register_button = Button(root, image=register_icon, bg="#f4fdfe", bd=0, command=Register)
+register_button.place(x=170, y=100)
 
-Label(root, text="Send", font=('Acumin Variable Concept', 17, 'bold'), bg="#f4fdfe").place(x=55, y=190)
-Label(root, text="Receive", font=('Acumin Variable Concept', 17, 'bold'), bg="#f4fdfe").place(x=295, y=190)
+login_icon = PhotoImage(file="icons/login.png").subsample(3)  # Resizes the image by a factor of 2
+login_button = Button(root, image=login_icon, bg="#f4fdfe", bd=0, command=Login)
+login_button.place(x=270, y=98)
+
+receive_icon = PhotoImage(file="icons/receive.png").subsample(3)  # Resizes the image by a factor of 2
+receive = Button(root, image=receive_icon, bg="#f4fdfe", bd=0, state=DISABLED, command=Receive)
+receive.place(x=370, y=100)
+
+
+Label(root, text="Send", font=('Acumin Variable Concept', 14), bg="#f4fdfe").place(x=70, y=190)
+Label(root, text="Register", font=('Acumin Variable Concept', 14), bg="#f4fdfe").place(x=170, y=190)
+Label(root, text="Login", font=('Acumin Variable Concept', 14), bg="#f4fdfe").place(x=278, y=190)
+Label(root, text="Receive", font=('Acumin Variable Concept', 14), bg="#f4fdfe").place(x=370, y=190)
 
 background = PhotoImage(file="icons/background.png")
 Label(root, image=background).place(x=-2, y=323, relwidth=1, relheight=0.43)
