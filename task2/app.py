@@ -1,7 +1,8 @@
 import os
 import threading
 from tkinter import *
-from tkinter import filedialog, messagebox
+from tkinter import filedialog, messagebox, ttk
+from PIL import ImageTk, Image
 import sqlite3
 import socket
 import hashlib
@@ -14,10 +15,10 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 root = Tk()
 root.title("Share")
-root.geometry("500x560+500+200")
+root.geometry("500x660+500+200")
 root.configure(bg="#f4fdfe")
 root.resizable(False, False)
-
+selected_files = []
 conn = sqlite3.connect('sysstecks.db')
 c = conn.cursor()
 
@@ -118,6 +119,7 @@ def Login():
             login_window.destroy()
             send.config(state=NORMAL)
             receive.config(state=NORMAL)
+            organize.config(state=NORMAL)
         else:
             messagebox.showerror("Error", "Invalid username or password")
 
@@ -151,6 +153,7 @@ def Send():
     def select_file():
         global filename
         filename = filedialog.askopenfilename(initialdir=os.getcwd(), title="Select File", filetype=(('file_type', '*.txt'), ('all files', '*.*')))
+        selected_files.append(filename)
 
     def send_file():
         s = socket.socket()
@@ -160,14 +163,17 @@ def Send():
         s.listen(1)
         print('Waiting for connections')
         conn, address = s.accept()
-        encrypt_file(key, filename, filename)
-        with open(filename, 'rb') as f:
-            file_data = f.read(1024)
-            while file_data:
-                conn.send(file_data)
+        for file in selected_files:
+            encrypted_filename = file
+            encrypt_file(key, file, encrypted_filename)
+            conn.send(file.encode())
+            with open(encrypted_filename, 'rb') as f:
                 file_data = f.read(1024)
+                while file_data:
+                    conn.send(file_data)
+                    file_data = f.read(1024)
         conn.close()
-        print("File sent successfully!")
+        print("All files sent successfully!")
 
     def sender():
         thread = threading.Thread(target=send_file)
@@ -199,18 +205,22 @@ def Receive():
 
     def receiver():
         id = sender_id.get()
-        filename_dup = file_name.get()
         s = socket.socket()
         port = 8080
         s.connect((id, port))
-        with open(filename_dup, 'wb') as f:
-            while True:
-                file_data = s.recv(1024)
-                if not file_data:
-                    break
-                f.write(file_data)
+        while True:
+            filename_data = s.recv(1024)
+            if not filename_data:
+                break
+            original_filename = filename_data.decode()
+            with open(original_filename, 'wb') as f:
+                while True:
+                    encrypted_data = s.recv(1024)
+                    if not encrypted_data:
+                        break
+                    f.write(encrypted_data)
+            decrypt_file(key, original_filename, original_filename)
         s.close()
-        decrypt_file(key, filename_dup, filename_dup)
         print("File Received and Decrypted Successfully!")
 
     window_icon = PhotoImage(file="icons/receive.png")
@@ -228,15 +238,37 @@ def Receive():
     sender_id.place(x=184, y=310)
     sender_id.focus()
 
-    Label(window, text="Filename", font=('arial', 17), bg="#f4fdfe").place(x=20, y=340)
-    file_name = Entry(window, width=20, fg='black', border=2, bg='white', font=('arial', 15))
-    file_name.place(x=124, y=340)
-
     download = PhotoImage(file="icons/receive.png").subsample(5)
     download_button = Button(window, image=download, compound=LEFT, text='Receive', width=130, bg="#39c790", font='arial 14 bold', command=receiver)
     download_button.place(x=20, y=380)
 
     window.mainloop()
+
+def Organize():
+    def delete_file(index):
+        selected_files.pop(index)
+        refresh_list()
+    def refresh_list():
+        for widget in org_frame.winfo_children():
+            widget.destroy()
+        for i, file in enumerate(selected_files):
+            label = ttk.Label(org_frame, text=file)
+            label.grid(row=i, column=0, sticky="w")
+            delete_button = ttk.Button(org_frame, text="❌", command=lambda x=i: delete_file(i))
+            delete_button.grid(row=i, column=1, sticky="e")
+
+    org_window = Toplevel(root)
+    org_window.title('Organize')
+    org_window.geometry('500x400+500+200')
+    org_window.configure(bg="#f4fdfe")
+    org_window.resizable(False, False)
+    org_icon = PhotoImage(file="icons/organize.png")
+    org_window.iconphoto(False, org_icon)
+    Label(org_window, text='Selected Files', font=('Acumin Variable Concept', 14), bg="#f4fdfe").place(x=190, y=10)
+    org_frame = ttk.Frame(org_window)
+    org_frame.pack(padx=30, pady=40)
+    refresh_list()
+    org_window.mainloop()
 
 password = b'ThisIsMyPasswordPleaseDoNotShare'
 salt = b'ThisIsMySalt'
@@ -264,13 +296,17 @@ receive_icon = PhotoImage(file="icons/receive.png").subsample(3)  # Resizes the 
 receive = Button(root, image=receive_icon, bg="#f4fdfe", bd=0, state=DISABLED, command=Receive)
 receive.place(x=370, y=100)
 
+organize_icon = PhotoImage(file="icons/organize.png").subsample(8)
+organize = Button(root, image=organize_icon, bg="#f4fdfe", bd=0, state=DISABLED, command=Organize)
+organize.place(x=180, y=250)
 
 Label(root, text="Send", font=('Acumin Variable Concept', 14), bg="#f4fdfe").place(x=70, y=190)
 Label(root, text="Register", font=('Acumin Variable Concept', 14), bg="#f4fdfe").place(x=170, y=190)
 Label(root, text="Login", font=('Acumin Variable Concept', 14), bg="#f4fdfe").place(x=278, y=190)
 Label(root, text="Receive", font=('Acumin Variable Concept', 14), bg="#f4fdfe").place(x=370, y=190)
+Label(root, text="Organize", font=('Acumin Variable Concept', 14), bg="#f4fdfe").place(x=215, y=335)
 
 background = PhotoImage(file="icons/background.png")
-Label(root, image=background).place(x=-2, y=323, relwidth=1, relheight=0.43)
+Label(root, image=background).place(x=-2, y=383, relwidth=1, relheight=0.43)
 
 root.mainloop()
