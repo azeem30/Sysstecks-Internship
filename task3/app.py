@@ -2,8 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import *
 from tkinter import filedialog, messagebox
-from tkinter.ttk import Combobox
-import pyttsx3
+from gtts import gTTS
 import os
 
 root = tk.Tk()
@@ -21,66 +20,27 @@ button_font = ("Helvetica", 14)
 style = ttk.Style()
 style.configure('TButton', font=button_font, background="#4CAF50", foreground="white", borderwidth=0, relief="raised")
 
-engine = pyttsx3.init()
-
 def speak():
     text = text_area.get(1.0, END)
-    gender = gender_combobox.get()
+    language = language_combobox.get()
     speed = speed_combobox.get()
-    voices = engine.getProperty('voices')
-
-    def set_voice():
-        if gender == 'Male':
-            engine.setProperty('voice', voices[0].id)
-            engine.say(text)
-            engine.runAndWait()
-        else:
-            engine.setProperty('voice', voices[1].id)
-            engine.say(text)
-            engine.runAndWait()
 
     if text:
-        if speed == 'Fast':
-            engine.setProperty('rate', 250)
-            set_voice()
-        elif speed == 'Normal':
-            engine.setProperty('rate', 150)
-            set_voice()
-        else:
-            engine.setProperty('rate', 60)
-            set_voice()
+        tts = gTTS(text=text, lang=language, slow=False if speed=="Fast" else True)
+        tts.save("output.mp3")
+        os.system("output.mp3")
 
 def download():
     text = text_area.get(1.0, END)
-    gender = gender_combobox.get()
+    language = language_combobox.get()
     speed = speed_combobox.get()
-    voices = engine.getProperty('voices')
-
-    def set_voice():
-        if gender == 'Male':
-            engine.setProperty('voice', voices[0].id)
-            path = filedialog.askdirectory()
-            os.chdir(path)
-            engine.save_to_file(text, 'text.mp3')
-            engine.runAndWait()
-        else:
-            engine.setProperty('voice', voices[1].id)
-            path = filedialog.askdirectory()
-            os.chdir(path)
-            engine.save_to_file(text, 'text.mp3')
-            engine.runAndWait()
 
     if text:
-        if speed == 'Fast':
-            engine.setProperty('rate', 250)
-            set_voice()
-        elif speed == 'Normal':
-            engine.setProperty('rate', 150)
-            set_voice()
-        else:
-            engine.setProperty('rate', 60)
-            set_voice()
-    messagebox.showinfo("Success", "File saved successfully")
+        tts = gTTS(text=text, lang=language, slow=False if speed=="Fast" else True)
+        path = filedialog.askdirectory()
+        os.chdir(path)
+        tts.save("output.mp3")
+        messagebox.showinfo("Success", "File saved successfully")
 
 top_frame = Frame(root, bg="#4CAF50", width=900, height=100)
 top_frame.place(x=0, y=0)
@@ -91,24 +51,24 @@ Label(top_frame, text="Text to Speech", font=title_font, bg="#4CAF50", fg="white
 text_area = Text(root, font=("Roboto", 14), bg="white", fg="black", relief=GROOVE, wrap=WORD)
 text_area.place(x=10, y=140, width=500, height=250)
 
-Label(root, text="VOICE", font=label_font, bg="#f0f0f0", fg="black").place(x=550, y=160)
+Label(root, text="LANGUAGE", font=label_font, bg="#f0f0f0", fg="black").place(x=550, y=120)
 
-gender_combobox = Combobox(root, values=["Male", "Female"], font=label_font, state='readonly', width=10)
-gender_combobox.place(x=550, y=200)
-gender_combobox.set('Male')
+language_combobox = ttk.Combobox(root, values=["en", "fr", "de"], font=label_font, state='readonly', width=10)
+language_combobox.place(x=550, y=160)
+language_combobox.set('en')
 
-Label(root, text="SPEED", font=label_font, bg="#f0f0f0", fg="black").place(x=740, y=160)
+Label(root, text="SPEED", font=label_font, bg="#f0f0f0", fg="black").place(x=740, y=120)
 
-speed_combobox = Combobox(root, values=["Fast", "Normal", "Slow"], font=label_font, state='readonly', width=10)
-speed_combobox.place(x=740, y=200)
+speed_combobox = ttk.Combobox(root, values=["Fast", "Normal"], font=label_font, state='readonly', width=10)
+speed_combobox.place(x=740, y=160)
 speed_combobox.set('Normal')
 
 speak_icon = PhotoImage(file="icons/speak.png").subsample(17)
 btn = Button(root, text="SPEAK", compound=LEFT, image=speak_icon, font=button_font, command=speak)
-btn.place(x=550, y=280)
+btn.place(x=550, y=320)
 
 save_icon = PhotoImage(file="icons/save.png").subsample(32)
 save = Button(root, text="SAVE", compound=LEFT, image=save_icon, font=button_font, bg="#4CAF50", command=download)
-save.place(x=690, y=280)
+save.place(x=690, y=320)
 
 root.mainloop()
