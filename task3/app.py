@@ -28,13 +28,13 @@ def speak():
     voice = voice_combobox.get()
 
     if text:
-        if language:
+        if language != 'en':
             tts = gTTS(text=text, lang=language, slow=False if speed=="Fast" else True)
             tts.save("output.mp3")
             os.system("output.mp3")
         else:
             engine = pyttsx3.init()
-            engine.setProperty('rate', 150 if speed == 'Normal' else 100)
+            engine.setProperty('rate', 100 if speed == 'Normal' else 250)
             voices = engine.getProperty('voices')
             if voice == 'Male':
                 engine.setProperty('voice', voices[0].id)
