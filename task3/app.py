@@ -31,6 +31,7 @@ def speak():
         if language != 'en':
             tts = gTTS(text=text, lang=language, slow=False if speed=="Fast" else True)
             tts.save("output.mp3")
+            tts.save("output.wav")
             os.system("output.mp3")
         else:
             engine = pyttsx3.init()
@@ -53,6 +54,7 @@ def download():
         path = filedialog.askdirectory()
         os.chdir(path)
         tts.save("output.mp3")
+        tts.save("output.wav")
         messagebox.showinfo("Success", "File saved successfully")
 
 top_frame = Frame(root, bg="#4CAF50", width=900, height=100)
