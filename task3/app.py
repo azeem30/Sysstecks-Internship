@@ -4,6 +4,7 @@ from tkinter import *
 from tkinter import filedialog, messagebox
 from gtts import gTTS
 import os
+import pyttsx3
 
 root = tk.Tk()
 root.title("Text to Speech Application")
@@ -24,11 +25,23 @@ def speak():
     text = text_area.get(1.0, END)
     language = language_combobox.get()
     speed = speed_combobox.get()
+    voice = voice_combobox.get()
 
     if text:
-        tts = gTTS(text=text, lang=language, slow=False if speed=="Fast" else True)
-        tts.save("output.mp3")
-        os.system("output.mp3")
+        if language:
+            tts = gTTS(text=text, lang=language, slow=False if speed=="Fast" else True)
+            tts.save("output.mp3")
+            os.system("output.mp3")
+        else:
+            engine = pyttsx3.init()
+            engine.setProperty('rate', 150 if speed == 'Normal' else 100)
+            voices = engine.getProperty('voices')
+            if voice == 'Male':
+                engine.setProperty('voice', voices[0].id)
+            else:
+                engine.setProperty('voice', voices[1].id)
+            engine.say(text)
+            engine.runAndWait()
 
 def download():
     text = text_area.get(1.0, END)
@@ -53,9 +66,15 @@ text_area.place(x=10, y=140, width=500, height=250)
 
 Label(root, text="LANGUAGE", font=label_font, bg="#f0f0f0", fg="black").place(x=550, y=120)
 
-language_combobox = ttk.Combobox(root, values=["en", "fr", "de"], font=label_font, state='readonly', width=10)
+language_combobox = ttk.Combobox(root, values=["en", "fr"], font=label_font, state='readonly', width=10)
 language_combobox.place(x=550, y=160)
 language_combobox.set('en')
+
+Label(root, text="VOICE", font=label_font, bg="#f0f0f0", fg="black").place(x=550, y=200)
+
+voice_combobox = ttk.Combobox(root, values=["Male", "Female"], font=label_font, state='readonly', width=10)
+voice_combobox.place(x=550, y=240)
+voice_combobox.set('Male')
 
 Label(root, text="SPEED", font=label_font, bg="#f0f0f0", fg="black").place(x=740, y=120)
 
