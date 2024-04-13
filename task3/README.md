@@ -24,17 +24,18 @@ This is a simple Text-to-Speech (TTS) application built using Python and Tkinter
    git clone https://github.com/yourusername/text-to-speech.git
     ```
 
-2. Install the requirements:
+2. Change the directory:
+
+    ```bash
+   cd task3 
+   ```
+
+3. Install the requirements:
 
     ```bash
    pip install -r requirements.txt 
    ```
 
-3. Change the directory:
-
-    ```bash
-   cd task3 
-   ```
 
 4. Run the application:
 
